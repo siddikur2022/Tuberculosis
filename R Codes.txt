@@ -1,0 +1,1822 @@
+
+# Load required libraries
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(writexl)
+
+# Set file path and sheet name
+file_path <- "C:/Users/Abu Bokkor Shiddik/Desktop/Research/TB/260125datatb.xlsx"
+sheet_name <- "data"
+library(dplyr)
+
+# Count the number of unique countries
+num_countries <- data %>%
+  summarise(unique_countries = n_distinct(Countries))
+
+print(num_countries)
+# Load required libraries
+library(readxl)
+library(dplyr)
+library(writexl)
+
+# Extract unique country names
+unique_countries <- data %>%
+  distinct(Countries) %>%
+  arrange(Countries) # Sort the countries alphabetically
+
+# Save the list to an Excel file
+output_file <- "C:/R/LABSTAT/54unique_countries.xlsx"
+write_xlsx(unique_countries, output_file)
+
+cat("Country list has been saved to:", output_file)
+
+# Read the data from Excel
+data <- read_excel(file_path, sheet = sheet_name)
+data
+# Separate ranges in specific columns
+# Define the columns to separate
+columns_to_separate <- c("Number of deaths due to tuberculosis, excluding HIV", 
+                         "Deaths due to tuberculosis among HIV-negative people (per 100 000 population)")
+# Function to split column into three: point estimate, lower bound, and upper bound, and clean stray characters
+split_column <- function(column) {
+  data %>%
+    separate(
+      !!sym(column), 
+      into = c(paste0(column, "_Estimate"), 
+               paste0(column, "_Lower"), 
+               paste0(column, "_Upper")),
+      sep = "\\[|\\]|-", 
+      extra = "merge", 
+      fill = "right"
+    ) %>%
+    mutate(across(ends_with("_Lower") | ends_with("_Upper"), ~ gsub("\\]|\\s", "", .))) # Remove ']' and whitespace
+}
+
+# Apply the updated function to the selected columns
+for (col in columns_to_separate) {
+  if (col %in% colnames(data)) {
+    data <- split_column(col)
+  }
+}
+
+# Function to split column into three: point estimate, lower bound, and upper bound
+split_column <- function(column) {
+  data %>%
+    separate(
+      !!sym(column), 
+      into = c(paste0(column, ""), 
+               paste0(column, "Lower"), 
+               paste0(column, "Upper")),
+      sep = "\\[|\\]|-", 
+      extra = "merge", 
+      fill = "right"
+    ) %>%
+    mutate(across(ends_with("Lower") | ends_with("Upper"), ~ gsub("\\s", "", .)))
+}
+
+# Apply the function to the selected columns
+for (col in columns_to_separate) {
+  if (col %in% colnames(data)) {
+    data <- split_column(col)
+  }
+}
+
+# Save the modified dataset to a new Excel file
+output_file <- "C:/R/LABSTAT/3datatb_modified.xlsx"
+write_xlsx(data, output_file)
+
+cat("Data has been saved to:", output_file)
+
+
+
+
+
+
+
+
+
+
+
+
+# Load required libraries
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(writexl)
+
+# Set file path and sheet name
+file_path <- "C:/R/LABSTAT/datatb.xlsx"
+sheet_name <- "data1"
+
+# Read the data from Excel
+data <- read_excel(file_path, sheet = sheet_name)
+data
+
+
+# Load required libraries
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(writexl)
+
+# Set file path and sheet name
+file_path <- "C:/R/LABSTAT/datatb.xlsx"
+sheet_name <- "data1"
+
+# Read the data from Excel
+data <- read_excel(file_path, sheet = sheet_name)
+
+# Convert columns to numeric where necessary
+data <- data %>%
+  mutate(
+    `TB patients with known HIV status (%)` = as.numeric(`TB patients with known HIV status (%)`),
+    `Tested TB patients HIV-positive (%)` = as.numeric(`Tested TB patients HIV-positive (%)`),
+    `HIV-positive TB patients on ART (antiretroviral therapy) (%)` = as.numeric(`HIV-positive TB patients on ART (antiretroviral therapy) (%)`)
+  )
+
+# Ensure data includes all years (2000 to 2022) for each country
+data_complete <- data %>%
+  complete(
+    `Countries, territories and areas`, 
+    Year = 2000:2022, 
+    fill = list(
+      `TB patients with known HIV status (%)` = 0,
+      `Tested TB patients HIV-positive (%)` = 0,
+      `HIV-positive TB patients on ART (antiretroviral therapy) (%)` = 0
+    )
+  )
+
+# Save the modified dataset to a new Excel file
+output_file <- "C:/R/LABSTAT/datatb_complete.xlsx"
+write_xlsx(data_complete, output_file)
+
+cat("Data has been saved to:", output_file)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Load required libraries
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(writexl)
+
+# Set file path and sheet name
+file_path <- "C:/R/LABSTAT/datatb.xlsx"
+sheet_name <- "data1"
+
+# Read the data from Excel
+data <- read_excel(file_path, sheet = sheet_name)
+
+# Convert columns to numeric, handling warnings
+data <- data %>%
+  mutate(
+    `TB patients with known HIV status (%)` = suppressWarnings(as.numeric(`TB patients with known HIV status (%)`)),
+    `Tested TB patients HIV-positive (%)` = suppressWarnings(as.numeric(`Tested TB patients HIV-positive (%)`)),
+    `HIV-positive TB patients on ART (antiretroviral therapy) (%)` = suppressWarnings(as.numeric(`HIV-positive TB patients on ART (antiretroviral therapy) (%)`))
+  )
+
+# List of all countries (as provided)
+all_countries <- c(
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", 
+  "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", 
+  "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia (Plurinational State of)", 
+  "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei Darussalam", "Bulgaria", "Burkina Faso", 
+  "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", 
+  "Chile", "China", "Colombia", "Comoros", "Congo", "Cook Islands", "Costa Rica", "Cote d'Ivoire", 
+  "Croatia", "Cuba", "Cyprus", "Czechia", "Democratic People's Republic of Korea", 
+  "Democratic Republic of the Congo", "Denmark", "Djibouti", "Dominica", "Dominican Republic", 
+  "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", 
+  "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", 
+  "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", 
+  "Hungary", "Iceland", "India", "Indonesia", "Iran (Islamic Republic of)", "Iraq", "Ireland", 
+  "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", 
+  "Kyrgyzstan", "Lao People's Democratic Republic", "Latvia", "Lebanon", "Lesotho", "Liberia", 
+  "Libya", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", 
+  "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia (Federated States of)", 
+  "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", 
+  "Nepal", "Netherlands (Kingdom of the)", "New Zealand", "Nicaragua", "Niger", "Nigeria", "Niue", 
+  "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea", 
+  "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Republic of Korea", 
+  "Republic of Moldova", "Romania", "Russian Federation", "Rwanda", "Saint Kitts and Nevis", 
+  "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", 
+  "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", 
+  "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Sudan", "Spain", "Sri Lanka", 
+  "Sudan", "Suriname", "Sweden", "Switzerland", "Syrian Arab Republic", "Tajikistan", "Thailand", 
+  "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkiye", "Turkmenistan", 
+  "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom of Great Britain and Northern Ireland", 
+  "United Republic of Tanzania", "United States of America", "Uruguay", "Uzbekistan", "Vanuatu", 
+  "Venezuela (Bolivarian Republic of)", "Viet Nam", "Yemen", "Zambia", "Zimbabwe"
+)
+
+# Ensure data includes all countries and all years (2000 to 2022)
+data_complete <- data %>%
+  complete(
+    `Countries, territories and areas` = all_countries,
+    Year = 2000:2022,
+    fill = list(
+      `TB patients with known HIV status (%)` = 0,
+      `Tested TB patients HIV-positive (%)` = 0,
+      `HIV-positive TB patients on ART (antiretroviral therapy) (%)` = 0
+    )
+  )
+
+# Save the modified dataset to a new Excel file
+output_file <- "C:/R/LABSTAT/11datatb_complete.xlsx"
+write_xlsx(data_complete, output_file)
+
+cat("Data has been processed and saved to:", output_file)
+
+
+
+
+
+
+
+
+
+
+
+
+# Load required libraries
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(writexl)
+
+# Set file path and sheet name
+file_path <- "C:/R/LABSTAT/datatb.xlsx"
+sheet_name <- "data1"
+
+# Read the data from Excel
+data <- read_excel(file_path, sheet = sheet_name)
+data
+# Convert necessary columns to numeric, handling character data gracefully
+data <- data %>%
+  mutate(across(starts_with("x"), ~as.numeric(gsub("[^0-9.]", "", .)), .names = "{.col}"))
+
+# List of all countries (as provided)
+all_countries <- c(
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", 
+  "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", 
+  "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia (Plurinational State of)", 
+  "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei Darussalam", "Bulgaria", "Burkina Faso", 
+  "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", 
+  "Chile", "China", "Colombia", "Comoros", "Congo", "Cook Islands", "Costa Rica", "Cote d'Ivoire", 
+  "Croatia", "Cuba", "Cyprus", "Czechia", "Democratic People's Republic of Korea", 
+  "Democratic Republic of the Congo", "Denmark", "Djibouti", "Dominica", "Dominican Republic", 
+  "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", 
+  "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", 
+  "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", 
+  "Hungary", "Iceland", "India", "Indonesia", "Iran (Islamic Republic of)", "Iraq", "Ireland", 
+  "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", 
+  "Kyrgyzstan", "Lao People's Democratic Republic", "Latvia", "Lebanon", "Lesotho", "Liberia", 
+  "Libya", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", 
+  "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia (Federated States of)", 
+  "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", 
+  "Nepal", "Netherlands (Kingdom of the)", "New Zealand", "Nicaragua", "Niger", "Nigeria", "Niue", 
+  "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea", 
+  "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Republic of Korea", 
+  "Republic of Moldova", "Romania", "Russian Federation", "Rwanda", "Saint Kitts and Nevis", 
+  "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", 
+  "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", 
+  "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Sudan", "Spain", "Sri Lanka", 
+  "Sudan", "Suriname", "Sweden", "Switzerland", "Syrian Arab Republic", "Tajikistan", "Thailand", 
+  "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkiye", "Turkmenistan", 
+  "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom of Great Britain and Northern Ireland", 
+  "United Republic of Tanzania", "United States of America", "Uruguay", "Uzbekistan", "Vanuatu", 
+  "Venezuela (Bolivarian Republic of)", "Viet Nam", "Yemen", "Zambia", "Zimbabwe"
+)
+
+# Create a data frame of all country-year combinations (2000 to 2022)
+country_years <- expand.grid(Countries = all_countries, Year = 2000:2022)
+
+# Merge the country-year combinations with the existing data
+data_complete <- merge(country_years, data, by = c("Countries", "Year"), all.x = TRUE)
+
+# Fill missing columns with 0
+data_complete[is.na(data_complete)] <- 0
+
+# Save the modified dataset to a new Excel file
+output_file <- "C:/R/LABSTAT/06554555datatb_complete_with_missing_years.xlsx"
+write_xlsx(data_complete, output_file)
+
+cat("Data with missing years added and filled with zeros has been saved to:", output_file)
+
+
+
+
+
+
+
+
+
+
+
+# Load required libraries
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(writexl)
+
+# Set file path and sheet name
+file_path <- "C:/R/LABSTAT/datatb.xlsx"
+sheet_name <- "data1"
+
+# Read the data from Excel
+data <- read_excel(file_path, sheet = sheet_name)
+
+# Display the first few rows to check the structure
+data
+
+# Convert necessary columns to numeric, handling character data gracefully
+data <- data %>%
+  mutate(across(c(`New cases tested for RR-/MDR-TB (%)`, `Previously treated cases tested for RR-/MDR-TB (%)`, 
+                  `Confirmed cases of RR-/MDR-TB`, `Cases started on MDR-TB treatment`), 
+                ~as.numeric(gsub("[^0-9.]", "", .)), .names = "{.col}"))
+
+# List of all countries (as provided previously or as needed)
+all_countries <- c(
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", 
+  "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", 
+  "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia (Plurinational State of)", 
+  "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei Darussalam", "Bulgaria", "Burkina Faso", 
+  "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", 
+  "Chile", "China", "Colombia", "Comoros", "Congo", "Cook Islands", "Costa Rica", "Cote d'Ivoire", 
+  "Croatia", "Cuba", "Cyprus", "Czechia", "Democratic People's Republic of Korea", 
+  "Democratic Republic of the Congo", "Denmark", "Djibouti", "Dominica", "Dominican Republic", 
+  "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", 
+  "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", 
+  "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", 
+  "Hungary", "Iceland", "India", "Indonesia", "Iran (Islamic Republic of)", "Iraq", "Ireland", 
+  "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", 
+  "Kyrgyzstan", "Lao People's Democratic Republic", "Latvia", "Lebanon", "Lesotho", "Liberia", 
+  "Libya", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", 
+  "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia (Federated States of)", 
+  "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", 
+  "Nepal", "Netherlands (Kingdom of the)", "New Zealand", "Nicaragua", "Niger", "Nigeria", "Niue", 
+  "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea", 
+  "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Republic of Korea", 
+  "Republic of Moldova", "Romania", "Russian Federation", "Rwanda", "Saint Kitts and Nevis", 
+  "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", 
+  "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", 
+  "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Sudan", "Spain", "Sri Lanka", 
+  "Sudan", "Suriname", "Sweden", "Switzerland", "Syrian Arab Republic", "Tajikistan", "Thailand", 
+  "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkiye", "Turkmenistan", 
+  "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom of Great Britain and Northern Ireland", 
+  "United Republic of Tanzania", "United States of America", "Uruguay", "Uzbekistan", "Vanuatu", 
+  "Venezuela (Bolivarian Republic of)", "Viet Nam", "Yemen", "Zambia", "Zimbabwe"
+)
+
+# Create a data frame of all country-year combinations (2000 to 2022)
+country_years <- expand.grid(Countries = all_countries, Year = 2000:2022)
+
+# Merge the country-year combinations with the existing data
+data_complete <- merge(country_years, data, by.x = c("Countries", "Year"), by.y = c("Countries, territories and areas", "Year"), all.x = TRUE)
+
+# Fill missing columns with 0
+data_complete[is.na(data_complete)] <- 0
+
+# Save the modified dataset to a new Excel file
+output_file <- "C:/R/LABSTAT/00654555datatb_complete_with_missing_years.xlsx"
+write_xlsx(data_complete, output_file)
+
+cat("Data with missing years added and filled with zeros has been saved to:", output_file)
+
+
+
+
+
+
+
+
+
+
+
+
+# Load required libraries
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(writexl)
+
+# Set file path and sheet name
+file_path <- "C:/R/LABSTAT/datatb.xlsx"
+sheet_name <- "data1"
+
+# Read the data from Excel
+data <- read_excel(file_path, sheet = sheet_name)
+
+# Display the first few rows to check the structure
+data
+
+# Convert necessary columns to numeric, handling character data gracefully
+data <- data %>%
+  mutate(across(c(`Value`), 
+                ~as.numeric(gsub("[^0-9.]", "", .)), .names = "{.col}"))
+
+# List of all countries (as provided previously or as needed)
+all_countries <- c(
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", 
+  "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", 
+  "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia (Plurinational State of)", 
+  "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei Darussalam", "Bulgaria", "Burkina Faso", 
+  "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", 
+  "Chile", "China", "Colombia", "Comoros", "Congo", "Cook Islands", "Costa Rica", "Cote d'Ivoire", 
+  "Croatia", "Cuba", "Cyprus", "Czechia", "Democratic People's Republic of Korea", 
+  "Democratic Republic of the Congo", "Denmark", "Djibouti", "Dominica", "Dominican Republic", 
+  "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", 
+  "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", 
+  "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", 
+  "Hungary", "Iceland", "India", "Indonesia", "Iran (Islamic Republic of)", "Iraq", "Ireland", 
+  "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", 
+  "Kyrgyzstan", "Lao People's Democratic Republic", "Latvia", "Lebanon", "Lesotho", "Liberia", 
+  "Libya", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", 
+  "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia (Federated States of)", 
+  "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", 
+  "Nepal", "Netherlands (Kingdom of the)", "New Zealand", "Nicaragua", "Niger", "Nigeria", "Niue", 
+  "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea", 
+  "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Republic of Korea", 
+  "Republic of Moldova", "Romania", "Russian Federation", "Rwanda", "Saint Kitts and Nevis", 
+  "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", 
+  "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", 
+  "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Sudan", "Spain", "Sri Lanka", 
+  "Sudan", "Suriname", "Sweden", "Switzerland", "Syrian Arab Republic", "Tajikistan", "Thailand", 
+  "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkiye", "Turkmenistan", 
+  "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom of Great Britain and Northern Ireland", 
+  "United Republic of Tanzania", "United States of America", "Uruguay", "Uzbekistan", "Vanuatu", 
+  "Venezuela (Bolivarian Republic of)", "Viet Nam", "Yemen", "Zambia", "Zimbabwe"
+)
+
+# Create a data frame of all country-year combinations (2000 to 2022)
+country_years <- expand.grid(Countries = all_countries, Year = 2000:2022)
+
+# Merge the country-year combinations with the existing data
+data_complete <- merge(country_years, data, by.x = c("Countries", "Year"), by.y = c("Countries, territories and areas", "Year"), all.x = TRUE)
+
+# Fill missing columns with 0
+data_complete[is.na(data_complete)] <- 0
+
+# Save the modified dataset to a new Excel file
+output_file <- "C:/R/LABSTAT/855100654555datatb_complete_with_missing_years.xlsx"
+write_xlsx(data_complete, output_file)
+
+cat("Data with missing years added and filled with zeros has been saved to:", output_file)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Load required libraries
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(writexl)
+
+# Set file path and sheet name
+file_path <- "C:/R/LABSTAT/datatb.xlsx"
+sheet_name <- "data1"
+
+# Read the data from Excel
+data <- read_excel(file_path, sheet = sheet_name)
+
+# Display the first few rows to check the structure
+data
+
+
+# Load required libraries
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(writexl)
+
+# Set file path and sheet name
+file_path <- "C:/R/LABSTAT/datatb.xlsx"
+sheet_name <- "data1"
+
+# Read the data from Excel
+data <- read_excel(file_path, sheet = sheet_name)
+
+# List of all countries (as provided previously or as needed)
+all_countries <- c(
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", 
+  "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", 
+  "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia (Plurinational State of)", 
+  "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei Darussalam", "Bulgaria", "Burkina Faso", 
+  "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", 
+  "Chile", "China", "Colombia", "Comoros", "Congo", "Cook Islands", "Costa Rica", "Cote d'Ivoire", 
+  "Croatia", "Cuba", "Cyprus", "Czechia", "Democratic People's Republic of Korea", 
+  "Democratic Republic of the Congo", "Denmark", "Djibouti", "Dominica", "Dominican Republic", 
+  "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", 
+  "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", 
+  "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", 
+  "Hungary", "Iceland", "India", "Indonesia", "Iran (Islamic Republic of)", "Iraq", "Ireland", 
+  "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", 
+  "Kyrgyzstan", "Lao People's Democratic Republic", "Latvia", "Lebanon", "Lesotho", "Liberia", 
+  "Libya", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", 
+  "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia (Federated States of)", 
+  "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", 
+  "Nepal", "Netherlands (Kingdom of the)", "New Zealand", "Nicaragua", "Niger", "Nigeria", "Niue", 
+  "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea", 
+  "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Republic of Korea", 
+  "Republic of Moldova", "Romania", "Russian Federation", "Rwanda", "Saint Kitts and Nevis", 
+  "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", 
+  "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", 
+  "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Sudan", "Spain", "Sri Lanka", 
+  "Sudan", "Suriname", "Sweden", "Switzerland", "Syrian Arab Republic", "Tajikistan", "Thailand", 
+  "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkiye", "Turkmenistan", 
+  "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom of Great Britain and Northern Ireland", 
+  "United Republic of Tanzania", "United States of America", "Uruguay", "Uzbekistan", "Vanuatu", 
+  "Venezuela (Bolivarian Republic of)", "Viet Nam", "Yemen", "Zambia", "Zimbabwe"
+)
+
+# Filter the data to include only the countries in the 'all_countries' list
+data_filtered <- data %>%
+  filter(`Country Name` %in% all_countries)
+
+# Reshape the data to long format (Country, Year, Value)
+data_long <- data_filtered %>%
+  pivot_longer(cols = `2000`:`2022`,  # Adjusted to include 2000 to 2022
+               names_to = "Year", 
+               values_to = "Value") %>%
+  mutate(Year = as.numeric(Year))  # Convert Year to numeric
+
+# Ensure all countries have data for every year from 2000 to 2022
+data_complete <- data_long %>%
+  complete(`Country Name`, Year = 2000:2022, fill = list(Value = 0))
+
+# Save the reshaped data with missing years filled as 0 to a new Excel file
+output_file <- "C:/R/LABSTAT/004554525454541reshaped_data_filtered_2000_2022_with_missing_years.xlsx"
+write_xlsx(data_complete, output_file)
+
+cat("Reshaped data with missing years filled as 0 has been saved to:", output_file)
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Load required libraries
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(writexl)
+
+# Set file path and sheet name
+file_path <- "C:/R/LABSTAT/datatb.xlsx"
+sheet_name <- "data1"
+
+# Read the data from Excel
+data <- read_excel(file_path, sheet = sheet_name)
+
+data# Convert necessary columns to numeric, handling character data gracefully
+data <- data %>%
+  mutate(across(c(Value), 
+                ~as.numeric(gsub("[^0-9.]", "", .)), .names = "{.col}"))
+
+# List of all countries (as provided previously or as needed)
+all_countries <- c(
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", 
+  "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", 
+  "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia (Plurinational State of)", 
+  "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei Darussalam", "Bulgaria", "Burkina Faso", 
+  "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", 
+  "Chile", "China", "Colombia", "Comoros", "Congo", "Cook Islands", "Costa Rica", "Cote d'Ivoire", 
+  "Croatia", "Cuba", "Cyprus", "Czechia", "Democratic People's Republic of Korea", 
+  "Democratic Republic of the Congo", "Denmark", "Djibouti", "Dominica", "Dominican Republic", 
+  "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", 
+  "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", 
+  "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", 
+  "Hungary", "Iceland", "India", "Indonesia", "Iran (Islamic Republic of)", "Iraq", "Ireland", 
+  "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", 
+  "Kyrgyzstan", "Lao People's Democratic Republic", "Latvia", "Lebanon", "Lesotho", "Liberia", 
+  "Libya", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", 
+  "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia (Federated States of)", 
+  "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", 
+  "Nepal", "Netherlands (Kingdom of the)", "New Zealand", "Nicaragua", "Niger", "Nigeria", "Niue", 
+  "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea", 
+  "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Republic of Korea", 
+  "Republic of Moldova", "Romania", "Russian Federation", "Rwanda", "Saint Kitts and Nevis", 
+  "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", 
+  "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", 
+  "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Sudan", "Spain", "Sri Lanka", 
+  "Sudan", "Suriname", "Sweden", "Switzerland", "Syrian Arab Republic", "Tajikistan", "Thailand", 
+  "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkiye", "Turkmenistan", 
+  "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom of Great Britain and Northern Ireland", 
+  "United Republic of Tanzania", "United States of America", "Uruguay", "Uzbekistan", "Vanuatu", 
+  "Venezuela (Bolivarian Republic of)", "Viet Nam", "Yemen", "Zambia", "Zimbabwe"
+)
+# Filter the data to include only the countries in the 'all_countries' list
+data_filtered <- data %>%
+  filter(Countries %in% all_countries)
+
+# Create a grid of all countries and years from 2000 to 2022
+all_combinations <- expand.grid(Countries = all_countries, Year = 2000:2022)
+
+# Merge this grid with the filtered data, filling missing values with 0
+data_complete <- all_combinations %>%
+  left_join(data_filtered, by = c("Countries", "Year")) %>%
+  mutate(Value = ifelse(is.na(Value), 0, Value))  # Set NA values to 0
+
+# Save the reshaped data to a new Excel file
+output_file <- "C:/R/LABSTAT/reshaped54547_54545data_with_all_countries_2000_2022.xlsx"
+write_xlsx(data_complete, output_file)
+
+cat("Data has been reshaped and saved to:", output_file)
+
+
+
+# Convert the 'Year' column in data_filtered to integer for proper merging
+data_filtered <- data_filtered %>%
+  mutate(Year = as.integer(Year))
+
+# Merge the grid with the filtered data, filling missing values with NA
+data_complete <- all_combinations %>%
+  left_join(data_filtered, by = c("Countries", "Year"))
+
+# Fill missing values with the previous year's data
+data_complete <- data_complete %>%
+  group_by(Countries) %>%
+  arrange(Countries, Year) %>%
+  fill(Value, .direction = "down") %>%  # Fill missing values downwards
+  ungroup()
+
+# Save the reshaped data to a new Excel file
+output_file <- "C:/R/LABSTAT/reshaped_d455554154ata_with_filled_values_2000_2022.xlsx"
+write_xlsx(data_complete, output_file)
+
+cat("Data has been reshaped and saved to:", output_file)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+################################################################
+
+
+# Load required libraries
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(writexl)
+
+# Set file path and sheet name
+file_path <- "C:/R/LABSTAT/datatb.xlsx"
+sheet_name <- "data1"
+
+# Read the data from Excel
+data <- read_excel(file_path, sheet = sheet_name)
+
+# Convert year columns to numeric, handling mixed types
+data <- data %>%
+  mutate(across(`2000`:`2022`, ~ as.numeric(as.character(.))))
+
+# List of all countries (as provided or needed)
+all_countries <- c(
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina",
+  "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados",
+  "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia (Plurinational State of)",
+  "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei Darussalam", "Bulgaria", "Burkina Faso",
+  "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad",
+  "Chile", "China", "Colombia", "Comoros", "Congo", "Cook Islands", "Costa Rica", "Cote d'Ivoire",
+  "Croatia", "Cuba", "Cyprus", "Czechia", "Democratic People's Republic of Korea",
+  "Democratic Republic of the Congo", "Denmark", "Djibouti", "Dominica", "Dominican Republic",
+  "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini",
+  "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana",
+  "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras",
+  "Hungary", "Iceland", "India", "Indonesia", "Iran (Islamic Republic of)", "Iraq", "Ireland",
+  "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait",
+  "Kyrgyzstan", "Lao People's Democratic Republic", "Latvia", "Lebanon", "Lesotho", "Liberia",
+  "Libya", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali",
+  "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia (Federated States of)",
+  "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru",
+  "Nepal", "Netherlands (Kingdom of the)", "New Zealand", "Nicaragua", "Niger", "Nigeria", "Niue",
+  "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea",
+  "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Republic of Korea",
+  "Republic of Moldova", "Romania", "Russian Federation", "Rwanda", "Saint Kitts and Nevis",
+  "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe",
+  "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia",
+  "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Sudan", "Spain", "Sri Lanka",
+  "Sudan", "Suriname", "Sweden", "Switzerland", "Syrian Arab Republic", "Tajikistan", "Thailand",
+  "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkiye", "Turkmenistan",
+  "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom of Great Britain and Northern Ireland",
+  "United Republic of Tanzania", "United States of America", "Uruguay", "Uzbekistan", "Vanuatu",
+  "Venezuela (Bolivarian Republic of)", "Viet Nam", "Yemen", "Zambia", "Zimbabwe"
+)
+
+# Filter the data to include only the countries in the list
+data_filtered <- data %>%
+  filter(`Country Name` %in% all_countries)
+
+# Reshape the data to long format (Country, Year, Value)
+data_long <- data_filtered %>%
+  pivot_longer(cols = `2000`:`2022`,  # Include all year columns
+               names_to = "Year",
+               values_to = "Value") %>%
+  mutate(Year = as.numeric(Year))  # Convert Year to numeric
+
+# Ensure all countries have data for every year from 2000 to 2022
+data_complete <- data_long %>%
+  complete(`Country Name`, Year = 2000:2022) %>%  # Create full grid of countries and years
+  group_by(`Country Name`) %>%                   # Group by country
+  fill(Value, .direction = "down") %>%           # Fill missing values with previous years' value
+  fill(Value, .direction = "up") %>%             # Fill remaining missing values upwards
+  ungroup()
+
+# View the completed dataset
+data_complete
+
+
+# Ensure all countries have data for every year from 2000 to 2022
+data_complete <- data_long %>%
+  complete(`Country Name`, Year = 2000:2022, fill = list(Value, .direction = "down"))
+
+# Save the reshaped data with missing years filled as 0 to a new Excel file
+output_file <- "C:/R/LABSTAT/0455454545454544esh874874ap45555545445ed_data_filtered_2000_2022_with_missing_years.xlsx"
+write_xlsx(data_complete, output_file)
+
+cat("Reshaped data with missing years filled as 0 has been saved to:", output_file)
+
+
+# Load required libraries
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(writexl)
+
+# Set file path and sheet name
+file_path <- "C:/R/LABSTAT/datatb.xlsx"
+sheet_name <- "data1"
+
+# Read the data from Excel
+data <- read_excel(file_path, sheet = sheet_name)
+
+# Convert year columns to numeric, handling mixed types
+data <- data %>%
+  mutate(across(`2000`:`2022`, ~ as.numeric(as.character(.))))
+
+# List of all countries (as provided or needed)
+all_countries <- c(
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", 
+  "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", 
+  "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia (Plurinational State of)", 
+  "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei Darussalam", "Bulgaria", "Burkina Faso", 
+  "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", 
+  "Chile", "China", "Colombia", "Comoros", "Congo", "Cook Islands", "Costa Rica", "Cote d'Ivoire", 
+  "Croatia", "Cuba", "Cyprus", "Czechia", "Democratic People's Republic of Korea", 
+  "Democratic Republic of the Congo", "Denmark", "Djibouti", "Dominica", "Dominican Republic", 
+  "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", 
+  "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", 
+  "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", 
+  "Hungary", "Iceland", "India", "Indonesia", "Iran (Islamic Republic of)", "Iraq", "Ireland", 
+  "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", 
+  "Kyrgyzstan", "Lao People's Democratic Republic", "Latvia", "Lebanon", "Lesotho", "Liberia", 
+  "Libya", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", 
+  "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia (Federated States of)", 
+  "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", 
+  "Nepal", "Netherlands (Kingdom of the)", "New Zealand", "Nicaragua", "Niger", "Nigeria", "Niue", 
+  "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea", 
+  "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Republic of Korea", 
+  "Republic of Moldova", "Romania", "Russian Federation", "Rwanda", "Saint Kitts and Nevis", 
+  "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", 
+  "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", 
+  "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Sudan", "Spain", "Sri Lanka", 
+  "Sudan", "Suriname", "Sweden", "Switzerland", "Syrian Arab Republic", "Tajikistan", "Thailand", 
+  "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkiye", "Turkmenistan", 
+  "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom of Great Britain and Northern Ireland", 
+  "United Republic of Tanzania", "United States of America", "Uruguay", "Uzbekistan", "Vanuatu", 
+  "Venezuela (Bolivarian Republic of)", "Viet Nam", "Yemen", "Zambia", "Zimbabwe"
+)
+
+# Filter the data to include only the countries in the list
+data_filtered <- data %>%
+  filter(`Country Name` %in% all_countries)
+
+# Reshape the data to long format (Country, Year, Value)
+data_long <- data_filtered %>%
+  pivot_longer(cols = `2000`:`2022`,  # Include all year columns
+               names_to = "Year", 
+               values_to = "Value") %>%
+  mutate(Year = as.numeric(Year))  # Convert Year to numeric
+
+# Ensure all countries have data for every year from 2000 to 2022
+data_complete <- data %>%
+  complete(`Country Name`, Year = 2000:2022) %>%  # Create full grid of countries and years
+  group_by(`Country Name`) %>%                   # Group by country
+  fill(Value, .direction = "down") %>%           # Fill missing values with previous years' value
+  ungroup()        
+
+# Save the reshaped data with missing years filled as 0 to a new Excel file
+output_file <- "C:/R/LABSTAT/data_filtered_2000_2022_with_missing_years.xlsx"
+write_xlsx(data_complete, output_file)
+
+# Print a success message
+cat("Data has been successfully reshaped and saved to", output_file, "\n")
+
+
+
+# Fill missing values with the previous year's data
+data_complete <- data_complete %>%
+  group_by(Countries) %>%
+  arrange(Countries, Year) %>%
+  fill(Value, .direction = "down") %>%  # Fill missing values downwards
+  ungroup()
+
+
+
+
+
+
+
+# Load required libraries
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(writexl)
+
+# Set file path and sheet name
+file_path <- "C:/R/LABSTAT/datatb.xlsx"
+sheet_name <- "data2"
+
+# Read the data from Excel
+data <- read_excel(file_path, sheet = sheet_name)
+data
+data# Convert necessary columns to numeric, handling character data gracefully
+data <- data %>%
+  mutate(across(c(Value), 
+                ~as.numeric(gsub("[^0-9.]", "", .)), .names = "{.col}"))
+
+# List of all countries (as provided previously or as needed)
+all_countries <- c(
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", 
+  "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", 
+  "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia (Plurinational State of)", 
+  "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei Darussalam", "Bulgaria", "Burkina Faso", 
+  "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", 
+  "Chile", "China", "Colombia", "Comoros", "Congo", "Cook Islands", "Costa Rica", "Cote d'Ivoire", 
+  "Croatia", "Cuba", "Cyprus", "Czechia", "Democratic People's Republic of Korea", 
+  "Democratic Republic of the Congo", "Denmark", "Djibouti", "Dominica", "Dominican Republic", 
+  "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", 
+  "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", 
+  "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", 
+  "Hungary", "Iceland", "India", "Indonesia", "Iran (Islamic Republic of)", "Iraq", "Ireland", 
+  "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", 
+  "Kyrgyzstan", "Lao People's Democratic Republic", "Latvia", "Lebanon", "Lesotho", "Liberia", 
+  "Libya", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", 
+  "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia (Federated States of)", 
+  "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", 
+  "Nepal", "Netherlands (Kingdom of the)", "New Zealand", "Nicaragua", "Niger", "Nigeria", "Niue", 
+  "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea", 
+  "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Republic of Korea", 
+  "Republic of Moldova", "Romania", "Russian Federation", "Rwanda", "Saint Kitts and Nevis", 
+  "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", 
+  "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", 
+  "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Sudan", "Spain", "Sri Lanka", 
+  "Sudan", "Suriname", "Sweden", "Switzerland", "Syrian Arab Republic", "Tajikistan", "Thailand", 
+  "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkiye", "Turkmenistan", 
+  "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom of Great Britain and Northern Ireland", 
+  "United Republic of Tanzania", "United States of America", "Uruguay", "Uzbekistan", "Vanuatu", 
+  "Venezuela (Bolivarian Republic of)", "Viet Nam", "Yemen", "Zambia", "Zimbabwe"
+)
+# Filter the data to include only the countries in the 'all_countries' list
+data_filtered <- data %>%
+  filter(Countries %in% all_countries)
+
+# Create a grid of all countries and years from 2000 to 2022
+all_combinations <- expand.grid(Countries = all_countries, Year = 2000:2022)
+
+# Merge this grid with the filtered data, filling missing values with 0
+data_complete <- all_combinations %>%
+  left_join(data_filtered, by = c("Countries", "Year")) %>%
+  fill(Value=0) %>%  # Fill missing values downwards
+  ungroup()
+data_complete
+
+# Save the reshaped data to a new Excel file
+output_file <- "C:/R/LABSTAT/52454545444re5shaped57578_54545data_with_all_countries_2000_2022.xlsx"
+write_xlsx(data_complete, output_file)
+
+cat("Data has been reshaped and saved to:", output_file)
+
+
+
+
+
+
+
+
+
+
+
+
+# Load required libraries
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(writexl)
+
+# Set file path and sheet name
+file_path <- "C:/R/LABSTAT/datatb.xlsx"
+sheet_name <- "data"
+
+# Read the data from Excel
+data <- read_excel(file_path, sheet = sheet_name)
+data
+
+
+
+
+
+# Load necessary libraries
+library(dplyr)
+library(writexl)
+
+# List of countries as provided
+all_countries <- c(
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", 
+  "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", 
+  "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia (Plurinational State of)", 
+  "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei Darussalam", "Bulgaria", "Burkina Faso", 
+  "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", 
+  "Chile", "China", "Colombia", "Comoros", "Congo", "Cook Islands", "Costa Rica", "Cote d'Ivoire", 
+  "Croatia", "Cuba", "Cyprus", "Czechia", "Democratic People's Republic of Korea", 
+  "Democratic Republic of the Congo", "Denmark", "Djibouti", "Dominica", "Dominican Republic", 
+  "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", 
+  "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", 
+  "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", 
+  "Hungary", "Iceland", "India", "Indonesia", "Iran (Islamic Republic of)", "Iraq", "Ireland", 
+  "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", 
+  "Kyrgyzstan", "Lao People's Democratic Republic", "Latvia", "Lebanon", "Lesotho", "Liberia", 
+  "Libya", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", 
+  "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia (Federated States of)", 
+  "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", 
+  "Nepal", "Netherlands (Kingdom of the)", "New Zealand", "Nicaragua", "Niger", "Nigeria", "Niue", 
+  "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea", 
+  "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Republic of Korea", 
+  "Republic of Moldova", "Romania", "Russian Federation", "Rwanda", "Saint Kitts and Nevis", 
+  "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", 
+  "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", 
+  "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Sudan", "Spain", "Sri Lanka", 
+  "Sudan", "Suriname", "Sweden", "Switzerland", "Syrian Arab Republic", "Tajikistan", "Thailand", 
+  "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkiye", "Turkmenistan", 
+  "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom of Great Britain and Northern Ireland", 
+  "United Republic of Tanzania", "United States of America", "Uruguay", "Uzbekistan", "Vanuatu", 
+  "Venezuela (Bolivarian Republic of)", "Viet Nam", "Yemen", "Zambia", "Zimbabwe"
+)
+
+# Define continent names and their countries
+continent_data <- data.frame(
+  Continent = c(
+    "Asia", "Europe", "Africa", "Oceania", "Americas"
+  ),
+  Countries = I(list(
+    c("Afghanistan", "Bangladesh", "India", "Pakistan", "Nepal", "China", "Japan", "Indonesia", "Iran", "Iraq", "Israel", "Kazakhstan", "Kuwait", "Kyrgyzstan", "Lebanon", "Malaysia", "Maldives", "Myanmar", "North Korea", "Oman", "Palestine", "Philippines", "Qatar", "Saudi Arabia", "South Korea", "Sri Lanka", "Syria", "Tajikistan", "Thailand", "Turkey", "Turkmenistan", "United Arab Emirates", "Uzbekistan", "Vietnam", "Yemen"),
+    c("Albania", "Andorra", "Armenia", "Austria", "Azerbaijan", "Belarus", "Belgium", "Bosnia and Herzegovina", "Bulgaria", "Croatia", "Cyprus", "Czechia", "Denmark", "Estonia", "Finland", "France", "Germany", "Greece", "Hungary", "Iceland", "Ireland", "Italy", "Latvia", "Lithuania", "Luxembourg", "Malta", "Moldova", "Monaco", "Montenegro", "Netherlands", "Poland", "Portugal", "Romania", "Russia", "San Marino", "Serbia", "Slovakia", "Slovenia", "Spain", "Sweden", "Switzerland", "Ukraine", "United Kingdom"),
+    c("Algeria", "Angola", "Benin", "Botswana", "Burkina Faso", "Burundi", "Cameroon", "Cabo Verde", "Central African Republic", "Chad", "Comoros", "Congo", "Democratic Republic of the Congo", "Djibouti", "Egypt", "Equatorial Guinea", "Eritrea", "Ethiopia", "Gabon", "Gambia", "Ghana", "Guinea", "Guinea-Bissau", "Ivory Coast", "Kenya", "Lesotho", "Liberia", "Libya", "Madagascar", "Malawi", "Mali", "Mauritania", "Mauritius", "Morocco", "Mozambique", "Namibia", "Niger", "Nigeria", "Rwanda", "Senegal", "Seychelles", "Sierra Leone", "Somalia", "South Africa", "Sudan", "Togo", "Tunisia", "Uganda", "Zambia", "Zimbabwe"),
+    c("Australia", "Fiji", "Kiribati", "Marshall Islands", "Micronesia", "Nauru", "New Zealand", "Palau", "Papua New Guinea", "Samoa", "Solomon Islands", "Tonga", "Tuvalu", "Vanuatu"),
+    c("Argentina", "Barbados", "Belize", "Bolivia", "Brazil", "Canada", "Chile", "Colombia", "Costa Rica", "Cuba", "Dominican Republic", "Ecuador", "El Salvador", "Grenada", "Guatemala", "Guyana", "Haiti", "Honduras", "Jamaica", "Mexico", "Nicaragua", "Panama", "Paraguay", "Peru", "Suriname", "Trinidad and Tobago", "United States", "Uruguay", "Venezuela")
+  ))
+)
+
+# Create a summary with unique countries and their corresponding continent
+continent_summary <- continent_data %>%
+  mutate(Country_Count = sapply(Countries, length)) %>%
+  unnest(cols = c(Countries)) %>%
+  select(Continent, Countries)
+
+# Save this summary to an Excel file
+write_xlsx(continent_summary, "1continent_summary.xlsx")
+
+# View the summary
+continent_summary
+
+
+# Count the number of unique countries
+unique_countries_count <- data %>%
+  select(Countries) %>%
+  distinct() %>%
+  nrow()
+
+# Print the count
+print(paste("Number of unique countries:", unique_countries_count))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Load required libraries
+library(ggplot2)
+library(dplyr)
+library(rworldmap)
+library(sf)
+library(scales)  # For controlling number formatting
+
+# Read the data (you already did this step)
+data <- read_excel("C:/R/LABSTAT/datatb.xlsx", sheet = "data")
+
+# Select the relevant columns and filter for non-missing data
+data_clean <- data %>%
+  select(Countries, Year, X1) %>%
+  filter(!is.na(X1))
+
+# Download the world map (as an sf object)
+world_map <- st_as_sf(rworldmap::getMap())
+
+# Merge your data with the world map data based on country names
+merged_data <- world_map %>%
+  left_join(data_clean, by = c("NAME" = "Countries"))
+
+# Plot the world map with X1 variable values as color
+ggplot(data = merged_data) +
+  geom_sf(aes(fill = X1)) +
+  scale_fill_viridis_c(option = "C", trans = "identity", 
+                       limits = c(min(merged_data$X1, na.rm = TRUE), 
+                                  max(merged_data$X1, na.rm = TRUE)),
+                       labels = label_number(accuracy = 0.01)) +  # Formatting without scientific notation
+  theme_minimal() +
+  labs(title = "World Map Showing X1 Values",
+       fill = "X1 Value") +
+  theme(legend.position = "right", 
+        axis.text = element_blank(),
+        axis.title = element_blank())
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Load required libraries
+library(ggplot2)
+library(dplyr)
+library(rworldmap)
+library(sf)
+library(scales)  # For controlling number formatting
+
+# Read the data (you already did this step)
+data <- read_excel("C:/R/LABSTAT/datatb.xlsx", sheet = "data")
+
+# Select the relevant columns and filter for non-missing data
+data_clean <- data %>%
+  select(Countries, Year, X1) %>%
+  filter(!is.na(X1))
+
+# Download the world map (as an sf object)
+world_map <- st_as_sf(rworldmap::getMap())
+
+# Merge your data with the world map data based on country names
+merged_data <- world_map %>%
+  left_join(data_clean, by = c("NAME" = "Countries"))
+
+# Create a data frame with country centroids for labeling
+centroids <- st_centroid(merged_data)
+
+# Plot the world map with X1 variable values as color and country names as labels
+ggplot(data = merged_data) +
+  geom_sf(aes(fill = X1)) +
+  scale_fill_viridis_c(option = "C", trans = "identity", 
+                       limits = c(min(merged_data$X1, na.rm = TRUE), 
+                                  max(merged_data$X1, na.rm = TRUE)),
+                       labels = label_number(scale = 1e-6, accuracy = 0.01)) +  # Display in millions
+  theme_minimal() +
+  labs(title = "World Map Showing Case Values (in Millions)",
+       fill = "Case Value (Million)") +
+  theme(legend.position = "bottom", 
+        axis.text = element_blank(),
+        axis.title = element_blank()) +
+  # Add country names as text labels
+  geom_text(data = centroids, aes(x = st_coordinates(centroids)[,1], 
+                                  y = st_coordinates(centroids)[,2], 
+                                  label = merged_data$NAME),
+            size = 2, check_overlap = TRUE, color = "black") +  # Adjust size as needed
+  # Add continent names (this requires a separate dataset or manually labeling)
+  geom_sf_label(data = merged_data, aes(label = NAME), 
+                size = 3, color = "black", label.size = 0.1)
+
+
+
+# Load required libraries
+library(ggplot2)
+library(dplyr)
+library(rworldmap)
+library(sf)
+library(scales)  # For controlling number formatting
+
+# Read the data (you already did this step)
+data <- read_excel("C:/R/LABSTAT/datatb.xlsx", sheet = "data")
+
+# Select the relevant columns and filter for non-missing data
+data_clean <- data %>%
+  select(Countries, Year, X1) %>%
+  filter(!is.na(X1))
+
+# Download the world map (as an sf object)
+world_map <- st_as_sf(rworldmap::getMap())
+
+# Merge your data with the world map data based on country names
+merged_data <- world_map %>%
+  left_join(data_clean, by = c("NAME" = "Countries"))
+
+# Plot the world map with X1 variable values as color and country names as labels
+a= ggplot(data = merged_data) +
+  geom_sf(aes(fill = X1)) +
+  scale_fill_viridis_c(option = "C", trans = "identity", 
+                       limits = c(min(merged_data$X1, na.rm = TRUE), 
+                                  max(merged_data$X1, na.rm = TRUE)),
+                       labels = label_number(scale = 1e-6, accuracy = 0.01)) +  # Display in millions
+  theme_minimal() +
+  labs(title = "World Map Showing Case Values (in Millions)",
+       fill = "Case Value (Million)") +
+  theme(legend.position = "right", 
+        axis.text = element_blank(),
+        axis.title = element_blank()) +
+  # Add country names directly using geom_sf_label
+  geom_sf_label(aes(label = NAME), 
+                size = 3, color = "black", label.size = 0.1)  # Adjust size as needed
+a
+# Save the plot as a PNG file
+ggsave("world_map_case_values.png", plot = a, width = 20, height = 15, dpi = 300)
+
+# Save the plot as a PDF file
+ggsave("world_map_case_values.pdf", plot = a, width = 12, height = 8)
+
+
+
+
+
+
+# Load required libraries
+library(ggplot2)
+library(dplyr)
+library(rworldmap)
+library(sf)
+library(scales)
+
+# Read the data
+data <- read_excel("C:/R/LABSTAT/datatb.xlsx", sheet = "data")
+
+# Select the relevant columns and filter for non-missing data
+data_clean <- data %>%
+  select(Countries, Year, X1) %>%
+  filter(!is.na(X1))
+
+# Download the world map (as an sf object)
+world_map <- st_as_sf(rworldmap::getMap())
+
+# Add a CONTINENT column to the world map (manually assigning continents)
+world_map$CONTINENT <- world_map$REGION  # REGION contains continent-like information
+
+# Fix invalid geometries in the world map
+world_map <- st_make_valid(world_map)
+
+# Merge your data with the world map data based on country names
+merged_data <- world_map %>%
+  left_join(data_clean, by = c("NAME" = "Countries"))
+
+# Exclude Antarctica to avoid geometry issues (if relevant)
+merged_data <- merged_data %>%
+  filter(CONTINENT != "Antarctica")
+
+# Create a dataset for continents and calculate centroids for labeling
+continents_data <- merged_data %>%
+  group_by(CONTINENT) %>%
+  summarize(geometry = st_union(geometry), .groups = "drop")  # Merge geometries by continent
+
+# Calculate centroids of each continent
+continents_centroids <- st_centroid(continents_data)
+
+# Convert centroids to a data frame for easier plotting
+centroid_coords <- as.data.frame(st_coordinates(continents_centroids))
+centroid_coords$CONTINENT <- continents_data$CONTINENT
+
+# Plot the world map with X1 values as color and continent names as labels
+a <- ggplot(data = merged_data) +
+  geom_sf(aes(fill = X1)) +
+  scale_fill_viridis_c(option = "C", trans = "identity",
+                       limits = c(min(merged_data$X1, na.rm = TRUE),
+                                  max(merged_data$X1, na.rm = TRUE)),
+                       labels = label_number(scale = 1e-6, accuracy = 0.01)) +  # Display in millions
+  theme_minimal() +
+  labs(title = "World Map Showing Case Values (in Millions)",
+       fill = "Case Value (Million)") +
+  theme(legend.position = "right",
+        axis.text = element_blank(),
+        axis.title = element_blank()) +
+  # Add continent names as text labels
+  geom_text(data = centroid_coords,
+            aes(X, Y, label = CONTINENT),
+            size = 6, fontface = "bold", color = "black")
+
+# Display the plot
+a
+
+# Save the plot as a PNG file
+ggsave("world_map_continent_labels.png", plot = a, width = 20, height = 15, dpi = 300)
+
+
+
+
+
+
+
+
+
+
+
+# Load required libraries
+library(ggplot2)
+library(dplyr)
+library(rworldmap)
+library(sf)
+library(scales)
+
+# Read the data
+data <- read_excel("C:/R/LABSTAT/datatb.xlsx", sheet = "data")
+
+# Select the relevant columns and filter for non-missing data
+data_clean <- data %>%
+  select(Countries, Year, X1) %>%
+  filter(!is.na(X1))
+
+# Download the world map (as an sf object)
+world_map <- st_as_sf(rworldmap::getMap())
+
+# Merge your data with the world map data based on country names
+merged_data <- world_map %>%
+  left_join(data_clean, by = c("NAME" = "Countries"))
+
+# Plot the world map with X1 variable values as color
+a <- ggplot(data = merged_data) +
+  geom_sf(aes(fill = X1)) +
+  scale_fill_viridis_c(option = "C", trans = "identity",
+                       limits = c(min(merged_data$X1, na.rm = TRUE),
+                                  max(merged_data$X1, na.rm = TRUE)),
+                       labels = label_number(scale = 1e-6, accuracy = 0.01)) +  # Display in millions
+  theme_minimal() +
+  labs(title = "",
+       fill = "Case Value (Million)") +
+  theme(legend.position = "right",
+        axis.text = element_blank(),
+        axis.title = element_blank())
+
+# Display the plot
+a
+
+# Save the plot as a PNG file
+ggsave("world_map_without_labels.png", plot = a, width = 20, height = 15, dpi = 300)
+
+
+
+
+
+
+
+
+
+
+
+# Load required libraries
+library(ggplot2)
+library(dplyr)
+library(rworldmap)
+library(sf)
+library(scales)
+
+# Read the data
+data <- read_excel("C:/R/LABSTAT/datatb.xlsx", sheet = "data")
+
+# Select the relevant columns and filter for non-missing data
+data_clean <- data %>%
+  select(Countries, Year, X1) %>%
+  filter(!is.na(X1))
+
+# Calculate the total number of unique countries
+total_unique_countries <- n_distinct(data_clean$Countries)
+
+# Download the world map (as an sf object)
+world_map <- st_as_sf(rworldmap::getMap())
+
+# Ensure the world map is in WGS 84 CRS
+world_map <- st_transform(world_map, crs = 4326)
+
+# Merge your data with the world map data based on country names
+merged_data <- world_map %>%
+  left_join(data_clean, by = c("NAME" = "Countries"))
+
+# Plot the world map with X1 values as color
+a <- ggplot(data = merged_data) +
+  geom_sf(aes(fill = X1)) +
+  scale_fill_viridis_c(option = "C", trans = "identity",
+                       limits = c(min(merged_data$X1, na.rm = TRUE),
+                                  max(merged_data$X1, na.rm = TRUE)),
+                       labels = label_number(scale = 1e-6, accuracy = 1)) +  # Display in millions
+  theme_minimal() +
+  labs(
+    title = "2000-2022",
+    fill = "Case Value (Million)"
+  ) +
+  theme(
+    legend.position = "right",
+    axis.text = element_blank(),
+    axis.title = element_blank()
+  ) +
+  # Add total unique country count as text annotation in the bottom-left corner
+  annotate(
+    "text",
+    x = -160, y = -60,  # Adjust coordinates to place in the bottom-left corner
+    label = paste("Total Countries:", total_unique_countries),
+    color = "black", size = 5, hjust = 0
+  )
+
+# Display the plot
+a
+
+# Save the plot as a PNG file
+ggsave("world_map_with_total_unique_country_count.jpg", plot = a, width = 12, height = 5, dpi = 300)
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Load the required libraries
+library(dplyr)
+library(readxl)
+library(writexl)
+
+# Read the data
+data <- read_excel("C:/R/LABSTAT/datatb.xlsx", sheet = "data")
+data
+# Extract unique country names from the "Countries" column
+unique_countries <- data %>%
+  select(Countries) %>%
+  distinct()  # Get unique country names
+
+# Save the list of unique countries as an Excel file
+write_xlsx(unique_countries, "unique_countries.xlsx")
+
+# Check the first few rows to verify the result
+head(unique_countries)
+
+
+
+
+
+
+
+
+
+
+
+# Load necessary libraries
+library(dplyr)
+library(countrycode)
+library(writexl)
+
+# Create your countries list (already provided)
+countries_list <- data.frame(Countries = c(
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", 
+  "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", 
+  "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia (Plurinational State of)", 
+  "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei Darussalam", "Bulgaria", "Burkina Faso", 
+  "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", 
+  "Chile", "China", "Colombia", "Comoros", "Congo", "Cook Islands", "Costa Rica", "Cote d'Ivoire", 
+  "Croatia", "Cuba", "Cyprus", "Czechia", "Democratic People's Republic of Korea", 
+  "Democratic Republic of the Congo", "Denmark", "Djibouti", "Dominica", "Dominican Republic", 
+  "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", 
+  "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", 
+  "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", 
+  "Hungary", "Iceland", "India", "Indonesia", "Iran (Islamic Republic of)", "Iraq", "Ireland", 
+  "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", 
+  "Kyrgyzstan", "Lao People's Democratic Republic", "Latvia", "Lebanon", "Lesotho", "Liberia", 
+  "Libya", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", 
+  "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia (Federated States of)", 
+  "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", 
+  "Nepal", "Netherlands (Kingdom of the)", "New Zealand", "Nicaragua", "Niger", "Nigeria", "Niue", 
+  "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea", "Paraguay", 
+  "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Republic of Korea", "Republic of Moldova", 
+  "Romania", "Russian Federation", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", 
+  "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", 
+  "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", 
+  "Solomon Islands", "Somalia", "South Africa", "South Sudan", "Spain", "Sri Lanka", "Sudan", 
+  "Suriname", "Sweden", "Switzerland", "Syrian Arab Republic", "Tajikistan", "Thailand", "Timor-Leste", 
+  "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkiye", "Turkmenistan", "Tuvalu", "Uganda", 
+  "Ukraine", "United Arab Emirates", "United Kingdom of Great Britain and Northern Ireland", 
+  "United Republic of Tanzania", "United States of America", "Uruguay", "Uzbekistan", "Vanuatu", 
+  "Venezuela (Bolivarian Republic of)", "Viet Nam", "Yemen", "Zambia", "Zimbabwe"
+))
+
+# Add a 'Continent' column based on the country names
+countries_list$Continent <- countrycode(countries_list$Countries, origin = "country.name", destination = "continent")
+
+# Group the countries by continent
+grouped_by_continent <- countries_list %>% group_by(Continent) %>% arrange(Countries)
+
+# Save each continent's data as a separate Excel sheet
+write_xlsx(grouped_by_continent, "countries_by_continent.xlsx")
+
+# Optionally, you can save each continent into separate Excel files
+for (continent in unique(grouped_by_continent$Continent)) {
+  continent_data <- grouped_by_continent %>% filter(Continent == continent)
+  write_xlsx(continent_data, paste0("countries_", continent, ".xlsx"))
+}
+
+
+
+
+
+
+
+# Load the required libraries
+library(dplyr)
+library(readxl)
+library(writexl)
+
+# Read the data
+data <- read_excel("C:/R/LABSTAT/datatb.xlsx", sheet = "data")
+data
+# Create a continent lookup table
+continent_lookup <- data.frame(
+  Countries = c("Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", 
+                "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", 
+                "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", 
+                "Benin", "Bhutan", "Bolivia (Plurinational State of)", "Bosnia and Herzegovina", 
+                "Botswana", "Brazil", "Brunei Darussalam", "Bulgaria", "Burkina Faso", 
+                "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", 
+                "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", 
+                "Cote d'Ivoire", "Croatia", "Cuba", "Cyprus", "Czechia", "Democratic People's Republic of Korea", 
+                "Democratic Republic of the Congo", "Denmark", "Djibouti", "Dominica", 
+                "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", 
+                "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", 
+                "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", 
+                "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", 
+                "Hungary", "Iceland", "India", "Indonesia", "Iran (Islamic Republic of)", 
+                "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", 
+                "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Lao People's Democratic Republic", 
+                "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Lithuania", "Luxembourg", 
+                "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", 
+                "Mauritania", "Mauritius", "Mexico", "Micronesia (Federated States of)", "Monaco", 
+                "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", 
+                "Nauru", "Nepal", "Netherlands (Kingdom of the)", "New Zealand", "Nicaragua", 
+                "Niger", "Nigeria", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", 
+                "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", 
+                "Portugal", "Qatar", "Republic of Korea", "Republic of Moldova", "Romania", 
+                "Russian Federation", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", 
+                "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", 
+                "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", 
+                "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", 
+                "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", 
+                "Syrian Arab Republic", "Tajikistan", "Thailand", "Timor-Leste", "Togo", 
+                "Tonga", "Trinidad and Tobago", "Tunisia", "Turkiye", "Turkmenistan", 
+                "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom of Great Britain and Northern Ireland", 
+                "United Republic of Tanzania", "United States of America", "Uruguay", "Uzbekistan", 
+                "Vanuatu", "Venezuela (Bolivarian Republic of)", "Viet Nam", "Yemen", "Zambia", 
+                "Zimbabwe"),
+  Continent = c("Asia", "Europe", "Africa", "Europe", "Africa", "North America", 
+                "South America", "Asia", "Australia and Oceania", "Europe", "Asia", "North America", 
+                "Asia", "Asia", "North America", "Europe", "Europe", "North America", 
+                "Africa", "Asia", "South America", "Europe", "Africa", "South America", 
+                "Asia", "Europe", "Africa", "Africa", "Africa", "Asia", "Africa", "North America", 
+                "Africa", "Africa", "South America", "Asia", "South America", "Africa", 
+                "Africa", "North America", "Africa", "Europe", "North America", "Asia", 
+                "Europe", "Asia", "Africa", "Europe", "Africa", "North America", "North America", 
+                "South America", "Africa", "North America", "Africa", "Europe", "Africa", 
+                "Africa", "Australia and Oceania", "Europe", "Europe", "Africa", "Africa", 
+                "Asia", "Europe", "Africa", "Europe", "North America", "North America", 
+                "Africa", "Africa", "South America", "North America", "North America", 
+                "Europe", "Europe", "Asia", "Asia", "Asia", "Asia", "Europe", "Asia", "Europe", 
+                "North America", "Asia", "Asia", "Asia", "Asia", "Asia", "Asia", "Europe", 
+                "Africa", "Australia and Oceania", "Asia", "Asia", "Europe", "Africa", 
+                "Africa", "Africa", "Europe", "Europe", "Africa", "Africa", "Asia", "Asia", 
+                "Asia", "Asia", "Europe", "North America", "Europe", "Asia", "Africa", 
+                "Asia", "Europe", "Europe", "Africa", "Africa", "Africa", "Europe", 
+                "Africa", "Africa", "North America", "Europe", "Africa", "Africa", 
+                "Asia", "Africa", "Africa", "Asia", "Europe", "Europe", "Australia and Oceania", 
+                "Africa", "Europe", "Africa", "Africa", "Africa", "Asia", "Europe", 
+                "Europe", "Australia and Oceania", "Africa", "Africa", "Europe", "Asia", 
+                "South America", "Europe", "Asia", "Asia", "Europe", "Asia", "Europe", 
+                "Europe", "North America", "Europe", "North America", "Asia", "Asia", "Africa", 
+                "Africa", "Europe", "Asia", "Africa", "Africa", "Europe", "Africa", "Africa", 
+                "North America", "Africa", "Africa", "Africa", "Asia", "Africa", "Europe", 
+                "Europe", "Australia and Oceania", "Africa", "Africa", "Asia", "Asia", "Asia", 
+                "Asia", "North America", "Africa", "Asia", "Australia and Oceania", "Asia", 
+                "Europe", "Europe", "Africa", "Africa", "North America", "North America", 
+                "South America", "Asia", "Africa", "Africa")
+)
+
+# Join the data with the continent lookup table
+data_with_continents <- data %>%
+  left_join(continent_lookup, by = "Countries")
+
+# Save the updated data to an Excel file
+write_xlsx(data_with_continents, "C:/R/LABSTAT/data_with_continents.xlsx")
+
+
+
+
+
+
+#######################################################################
+#############################################
+####################
+#install.packages("ggcorrplot")
+# Load the required libraries
+library(dplyr)
+library(readxl)
+library(writexl)
+
+# Read the data
+data <- read_excel("C:/R/LABSTAT/TB.xlsx", sheet = "data")
+data
+library(ggcorrplot)
+library(dplyr)
+
+
+
+# Select only numerical columns
+numeric_data <- data %>%
+  select(where(is.numeric)) 
+
+# Compute correlation matrix
+cor_matrix <- cor(numeric_data, use = "pairwise.complete.obs")
+
+# Plot the upper triangular correlation matrix
+ggcorrplot(cor_matrix, 
+           method = "circle", 
+           type = "upper", 
+           lab = TRUE, 
+           tl.cex = 8, 
+           title = "Upper Triangular Correlation Matrix",
+           colors = c("blue", "white", "red"))
+# Load necessary libraries
+library(ggcorrplot)
+library(dplyr)
+
+# Select only numeric columns
+numeric_data <- data %>%
+  select(where(is.numeric))
+
+# Compute correlation matrix
+cor_matrix <- cor(numeric_data, use = "pairwise.complete.obs")
+
+# Plot the upper triangular correlation matrix
+ggcorrplot(cor_matrix, 
+           method = "square",   # Use square heatmap
+           type = "upper",      # Show only the upper triangle
+           lab = TRUE,          # Show correlation values inside the plot
+           lab_size = 3,        # Adjust label size for readability
+           tl.cex = 10,         # Increase axis text size
+           tl.srt = 45,         # Rotate axis labels for better visibility
+           colors = c("blue", "white", "red"),  # Set color gradient
+           title = "Upper Triangular Correlation Matrix",
+           ggtheme = theme_minimal())  # Use a clean theme
+
+
+
+
+
+
+
+
+
+
+
+
+# Load libraries
+library(car)
+library(ggcorrplot)
+library(dplyr)
+library(caret)  # Provides findCorrelation()
+
+# Read the dataset (update file path as needed)
+data <- read_excel("C:/R/LABSTAT/TB.xlsx", sheet = "data")
+data
+# Select only numeric variables (exclude categorical columns like Continent, Countries, and Year)
+numeric_data <- data %>%
+  select(where(is.numeric))
+
+# Remove columns with zero variance (constant columns)
+numeric_data <- numeric_data[, sapply(numeric_data, function(x) var(x, na.rm = TRUE) > 0)]
+
+# Compute correlation matrix
+cor_matrix <- cor(numeric_data, use = "pairwise.complete.obs")
+
+# Plot the upper triangular correlation matrix for visualization
+ggcorrplot(cor_matrix, 
+           method = "square",    # Use square heatmap
+           type = "upper",       # Show only upper triangle
+           lab = TRUE,           # Display correlation values
+           lab_size = 3,         # Adjust text size
+           tl.cex = 10,          # Increase axis text size
+           tl.srt = 45,          # Rotate axis labels for readability
+           colors = c("blue", "white", "red"),  # Set color gradient
+           title = "Upper Triangular Correlation Matrix",
+           ggtheme = theme_minimal())  # Use a clean theme
+
+# Remove highly correlated variables (above 0.9 threshold)
+threshold <- 0.9  # Correlation threshold
+highly_correlated <- findCorrelation(cor_matrix, cutoff = threshold, names = TRUE)
+
+# Remove correlated variables if any exist
+if (length(highly_correlated) > 0) {
+  numeric_data <- numeric_data %>% select(-all_of(highly_correlated))
+  cat("\nRemoved highly correlated variables:\n")
+  print(highly_correlated)
+}
+
+# Check for any remaining perfect multicollinearity by removing linear dependencies
+numeric_data <- numeric_data[, !is.na(apply(numeric_data, 2, var))]  # Remove NA variance columns
+
+# Fit a multiple linear regression model (choose a dependent variable, e.g., 'y1')
+model <- lm(y1 ~ ., data = numeric_data)  # Replace 'y1' with your dependent variable
+
+# Calculate VIF for each predictor variable
+vif_values <- vif(model)
+
+# Print VIF values
+print(vif_values)
+
+# Identify variables with high multicollinearity (VIF > 10)
+high_vif_vars <- names(vif_values[vif_values > 10])
+
+# Print problematic variables
+cat("\nVariables with high multicollinearity (VIF > 10):\n")
+print(high_vif_vars)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#install.packages("plm")
+
+library(plm)       # For panel data analysis
+library(readxl)    # For reading the Excel file
+library(dplyr)     # For data manipulation
+# Read the dataset (make sure to update the path)
+data <- read_excel("C:/R/LABSTAT/TB.xlsx", sheet = "data")
+
+# Convert Year and Countries to factors (for panel data)
+data$Year <- as.factor(data$Year)
+data$Countries <- as.factor(data$Countries)
+
+# Create the panel data structure
+pdata <- pdata.frame(data, index = c("Countries", "Year"))
+
+
+# Fixed-effects model
+model <- plm(X1 ~ y1 + y2 + y3 + y4 + y5 + y6 + y7 + y10 + y11 + y12 + y13 + 
+               y14 + y15 + y16 + y17 + y18 + y19 + y20 + y21 + y22 + y23 + 
+               y24 + y25 + y26 + y27 + y28 + y29 + y30 + y31, 
+             data = pdata, model = "within")
+
+# Summary of the model
+summary(model)
+
+
+
+# Replace NA values with 0 in the dataset
+data[is.na(data)] <- 0
+
+# Prepare the data for glmnet
+X <- as.matrix(data[, c("y1", "y2", "y3", "y4", "y5", "y6", "y7", 
+                        "y10", "y11", "y12", "y13", "y14", "y15", "y16", 
+                        "y17", "y18", "y19", "y20", "y21", "y22", "y23", 
+                        "y24", "y25", "y26", "y27", "y28", "y29", "y30", "y31")])
+y <- as.vector(data$X1)
+
+# Fit the ridge regression model with the data where NA values are replaced by 0
+ridge_model <- glmnet(X, y, alpha = 0)
+
+# View coefficients of the fitted ridge regression model
+print(coef(ridge_model))
+# Perform cross-validation to select the best lambda
+cv_ridge <- cv.glmnet(X, y, alpha = 0)
+
+# Plot cross-validation results to choose the best lambda
+plot(cv_ridge)
+
+# Best lambda from cross-validation
+best_lambda <- cv_ridge$lambda.min
+print(best_lambda)
+
+
+# Re-fit the ridge model with the optimal lambda
+ridge_model_best <- glmnet(X, y, alpha = 0, lambda = best_lambda)
+
+
+# Make predictions on the dataset or new data
+predictions <- predict(ridge_model_best, X)
+
+
+
+# Calculate Mean Squared Error (MSE)
+mse <- mean((y - predictions)^2)
+print(paste("MSE: ", mse))
+
+# Calculate R-squared (optional)
+sst <- sum((y - mean(y))^2)
+sse <- sum((y - predictions)^2)
+r_squared <- 1 - (sse / sst)
+print(paste("R-squared: ", r_squared))
